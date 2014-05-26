@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang='fa-IR' dir='rtl'>
+<head>
+  <meta charset='utf-8'>
+  <title>Ractive test</title>
+
+  <style type='text/css'>
+@font-face{font-family:Mitra;font-weight:normal;font-style:normal;src:url("../font/BMitra-Regular.eot");src:url("../font/BMitra-Regular.eot?#iefix") format("embedded-opentype"),url("../font/BMitra-Regular.woff") format("woff"),url("../font/BMitra-Regular.ttf") format("truetype"),url("../font/BMitra-Regular.svg#Mitra") format("svg")}@font-face{font-family:Mitra;font-weight:bold;font-style:normal;src:url("../font/BMitra-Bold.eot");src:url("../font/BMitra-Bold.eot?#iefix") format("embedded-opentype"),url("../font/BMitra-Bold.woff") format("woff"),url("../font/BMitra-Bold.ttf") format("truetype"),url("../font/BMitra-Bold.svg#Mitra") format("svg")}
+
+    body {
+      font-family: 'Mitra', Baskerville, sans;
+      line-height: 1.618;
+      -webkit-font-smoothing: antialiased;
+      color: #333;
+      background-color: #fafafa;
+    }
+    h1 {
+      color: #25A3EB;
+      border-bottom: 4px solid #EE5AA4;
+      line-height: 1.5em;
+    }
+    p {
+      font-size: 1.25em;
+    }
+
+    .container {
+      width: 720px;
+      margin: 0 auto;
+    }
+
+    #ractive-circle {
+      max-width: 408px;
+    }
+    svg {
+      max-height: 408px;
+      font-family: sans;
+      font-size: 1.5em; /*
+      margin: 0 auto;
+
+      display: block; */
+    }
+    svg text[lang=fa] {
+      font-family: 'Droid Arabic Naskh';
+      font-size: 0.5em;
+    }
+
+    #slice-radius-anchor {
+      stroke-opacity: 0;
+      stroke-width: 5px;
+      stroke: #4BB920;
+      /*fill: none;*/
+    }
+    #slice-radius-anchor:hover {
+      /*stroke: black;*/
+      /*stroke-width: 2px;*/
+      stroke-opacity: 1;
+    }
+
+    .left { float: left; }
+    .right { float: right; }
+    .block { display: block; margin: 0 auto; }
+
+    #polygon-circle polygon {
+      stroke: #7DBB20;
+      fill: #DEF8B8;
+    }
+  </style>
+</head>
+
+<body>
+  <div class='container'>
+    <h1>از مثلث تا دایره: داستان پی</h1>
+
+    <svg viewBox='-2 -2 260 160' style='max-width: 260px' class='left'>
+      <g stroke='black' fill='none'>
+        <polygon points='80,0 20,120 240,120' stroke-width='2'/>
+        <line x1='80' y1='0' x2='80' y2='120' />
+        <polyline points='80,110 90,110 90,120' />
+      </g>
+
+      <text lang='fa' y="93" x="-50" transform="rotate(-90)">ارتفاع</text>
+      <text lang='fa' x='135' y='135'>قاعده</text>
+    </svg>
+    <p></p>
+
+    <div id='ractive-circle'></div>
+  </div>
+  <!--
+       1. This is the element we'll render our Ractive to.
+  -->
+
+  <!--
+       2. You can load a template in many ways. For convenience, we'll include it in
+       a script tag so that we don't need to mess around with AJAX or multiline strings.
+       Note that we've set the type attribute to 'text/ractive' - though it can be
+       just about anything except 'text/javascript'
+  -->
+  <script id='template' type='text/ractive'>
+    <svg viewBox='-2 -2 406 406' class='block' data-sides='{{sides}}' id='polygon-circle'>
+      <circle cx="200" cy="200" r="200" stroke='#e0e0e0' stroke-dasharray="2 3" fill='transparent'/>
+      <g transform='translate(200,200)'>
+        <polygon points='{{getPoints()}}'/>
+        <line id='slice-radius' x1='0' y1='0' x2='{{sliceRadiusPoint.x}}' y2='{{sliceRadiusPoint.y}}' stroke='#333' />
+        <line draggable="true" id='slice-radius-anchor' x1='0' y1='0' x2='{{sliceRadiusPoint.x}}' y2='{{sliceRadiusPoint.y}}' stroke='#333' />
+        <line id='height' x1='0' y1='0' x2='{{sliceHeight.x}}' y2='{{sliceHeight.y}}' stroke='#8a8' />
+        <path d = "M {{angleArcStartPoint}} A 20,20 0 0,1 0,-20" fill='none' stroke='#333' />
+        <text x='{{theta.x}}' y='{{theta.y}}'>&#952;</text>
+      </g>
+      <circle cx="200" cy="200" r="1" fill='#333'/>
+      <line x1="200" y1="0" x2="200" y2="200" stroke='#333' stroke-dasharray='90 20' />
+
+      <text x="204" y="105">r</text>
+    </svg>
+    <div style='text-align: center; font-size: 1.5em;'>
+      <strong>{{sides}} ضلعی</strong>
+    </div>
+    <div>
+      <input type='range' min='3' max='25' value='{{sides}}' style='width: 100%;' autofocus />
+    </div>
+  </script>
+
+  <!--
+       3. You can always get the most recent stable version from the URL below.
+       If you want the newest features, use the 'edge' version instead:
+
+           http://cdn.ractivejs.org/edge/ractive.min.js
+
+       If you need IE8 support, change 'ractive' to 'ractive-legacy'.
+  -->
+  <script src='../js/ractive.js'></script>
+
+  <!--
+       4. We've got an element in the DOM, we've created a template, and we've
+       loaded the library - now it's time to build our Hello World app.
+  -->
+  <script>
+    function getPoint( angle, radius ) {
+      return [
+        Number.parseFloat(( radius * Math.sin( angle ) ).toFixed( 2 )),
+        Number.parseFloat(( radius * -Math.cos( angle ) ).toFixed( 2 ))
+      ];
+    }
+
+    var circle = new Ractive({
+      // The `el` option can be a node, an ID, or a CSS selector.
+      el: 'ractive-circle',
+
+      // We could pass in a string, but for the sake of convenience
+      // we're passing the ID of the <script> tag above.
+      template: '#template',
+
+      // Here, we're passing in some initial data
+      data: {
+        sides: 3,
+        radius: 200,
+
+        theta: { x: 0, y: 0 },
+        sliceRadiusPoint: { x: 0, y: 0 },
+        sliceHeight: { x: 0, y: 0 },
+        angleArcStartPoint: '0,0',
+
+        getPoints: function() {
+          var R = 200;
+          var n = this.get('sides');
+          var points = [];
+
+          for (var i = 0; i < n; i++) {
+            points.push(getPoint(Math.PI * 2 * i / n, R).join(','));
+          }
+          return points.join(' ');
+        }
+      }
+    });
+
+    circle.observe('sides', function(n, sidesWas, key) {
+      var p;
+
+      if (n > 25)
+        p = [0, 23];
+      else {
+        p = getPoint(Math.PI * 2 * ((2 * n - 1) / (2 * n)), 30);
+        p[0] += Math.log(this.get('sides') - 2) * 2;
+      }
+
+      this.set({theta: { x: p[0], y: p[1] }});
+    });
+
+    circle.observe('sides', function(n) {
+      var R = this.get('radius') * Math.cos(Math.PI / n);
+      var p = getPoint(Math.PI * 2 * ((2 * n - 1) / (2 * n)), R);
+
+      this.set({sliceHeight: { x: p[0], y: p[1] }});
+    });
+
+    circle.observe('sides', function(n, sidesWas, key) {
+      var R = this.get('radius');
+      var p = getPoint(Math.PI * 2 * (n - 1) / n, R);
+
+      this.set({sliceRadiusPoint: { x: p[0], y: p[1] }});
+    });
+
+    circle.observe('sides', function(n, sidesWas, key) {
+      var R = 20;
+      var p = getPoint(Math.PI * 2 * (n - 1) / n, R);
+
+      this.set({angleArcStartPoint: p.join(',')});
+    });
+
+    // circle.set({sides: 3});
+
+    var anchor = document.getElementById('slice-radius-anchor');
+    //anchor.addEventListener('drag', dragover);
+
+    function dragover(e) {
+      var angle = Math.atan(e.clientY / e.clientX);
+      var R = 200;
+      var point = getPoint(angle, R);
+      console.log(point);
+
+      anchor.attributes['x2'] = point[0];
+      anchor.attributes['y2'] = point[1];
+
+      //e.preventDefault();
+
+      // console.log(Math.atan(e.clientY / e.clientX) / Math.PI);
+    }
+  </script>
+</body>
+</html>
